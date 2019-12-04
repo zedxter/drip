@@ -15,13 +15,15 @@ def filter_by_dividend(df, min_dividend):
 
 def filter_by_dgr(df, min_grow):
     condition = sum([df['1-yr'], df['3-yr'], df['5-yr'], df['10-yr']]) / 4 > min_grow
-    return df[condition]
+    increase_only = (df['1-yr'] > 0) & (df['3-yr'] > 0) & (df['5-yr'] > 0) & (df['10-yr'] > 0)
+    return df[condition & increase_only]
 
 def filter_by_last_increase(df, min_grow):
     condition = df['Inc.'] > min_grow
     return df[condition]
 
 def format_columns(df):
+    pandas.options.display.float_format = ' {:,.2f}'.format
     df['Yrs'] = df['Yrs'].map('{:,.0f}'.format)
     df['Price'] = df['Price'].map('${:,.2f}'.format)
     df['Dividend'] = df['Dividend'].map('${:,.2f}'.format)
@@ -34,14 +36,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-g", "--group", 
                         default="champions",
-                        choices=['champions', 'contenders'],
+                        choices=['champions', 'contenders', 'challengers'],
                         required=True,
-                        help="List champions(>25y) or contenders(>10y) of consequent dividend increase")
+                        help="List champions(>25y), contenders(>10y) or challengers(<10y) of consequent dividend increase")
     parser.add_argument("-d", "--min-dividend", type=float, default=2.5)
     parser.add_argument("-r", "--min-grow", type=float, default=7.0)
     args = parser.parse_args()
 
-    pandas.options.display.float_format = ' {:,.2f}'.format 
     df = pandas.read_excel(SOURCE, sheet_name=args.group.capitalize(), skiprows=5, usecols=COLUMNS)
     df = filter_out_summary(df)
     df = filter_by_dividend(df, args.min_dividend)
