@@ -27,6 +27,7 @@ def format_columns(df):
     df['Dividend'] = df['Dividend'].map('${:,.2f}'.format)
     df['Yield'] = df['Yield'].map('{:,.2f}%'.format)
     df['Inc.'] = df['Inc.'].map('{:,.2f}%'.format)
+    df['Industry'] = df['Industry'].map(lambda x: x[:20])
 
 
 if __name__ == "__main__":
