@@ -26,6 +26,7 @@ def format_columns(df):
     df['Price'] = df['Price'].map('${:,.2f}'.format)
     df['Dividend'] = df['Dividend'].map('${:,.2f}'.format)
     df['Yield'] = df['Yield'].map('{:,.2f}%'.format)
+    df['Inc.'] = df['Inc.'].map('{:,.2f}%'.format)
 
 
 if __name__ == "__main__":
@@ -38,13 +39,9 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--min-dividend", type=float, default=2.5)
     parser.add_argument("-r", "--min-grow", type=float, default=7.0)
     args = parser.parse_args()
-    if args.group == 'champions':
-        SHEET_NAME = "Champions"
-    elif args.group == 'contenders':
-        SHEET_NAME = "Contenders"
 
     pandas.options.display.float_format = ' {:,.2f}'.format 
-    df = pandas.read_excel(SOURCE, sheet_name=SHEET_NAME, skiprows=5, usecols=COLUMNS)
+    df = pandas.read_excel(SOURCE, sheet_name=args.group.capitalize(), skiprows=5, usecols=COLUMNS)
     df = filter_out_summary(df)
     df = filter_by_dividend(df, args.min_dividend)
     df = filter_by_dgr(df, args.min_grow)
