@@ -2,7 +2,7 @@ import argparse
 import pandas
 
 from ranker import ZacksRanker
-from balance import CashFlowParser
+from balance import CashFlowParser, DivParser
 
 SOURCE = "https://bitly.com/USDividendChampions"
 COLUMNS = [0, 1, 3, 4, 8, 9, 10, 17, 18, 19, 20, 21]
@@ -28,15 +28,15 @@ def format_columns(df):
     df['Dividend'] = df['Dividend'].map('${:,.2f}'.format)
     df['Yield'] = df['Yield'].map('{:,.2f}%'.format)
     df['Inc.'] = df['Inc.'].map('{:,.2f}%'.format)
-    df['Coverage'] = df['Coverage'].map('{:,.2f}%'.format)
-    df['Industry'] = df['Industry'].map(lambda x: x[:20])
-    df['Name'] = df['Name'].map(lambda x: x[:20])
+    df['Cover'] = df['Cover'].map('{:,.2f}%'.format)
+    df['Industry'] = df['Industry'].map(lambda x: x[:18])
+    df['Name'] = df['Name'].map(lambda x: x[:18])
 
 def add_zacks_rank(df, max_rank):
     symbols = df['Symbol']
     ranks = ZacksRanker().get_for_list(symbols)
-    df['Zacks'] = [ranks.get(symbol) for symbol in symbols]
-    condition = (df['Zacks'] <= max_rank) & (df['Zacks'] > 0)
+    df['Z'] = [ranks.get(symbol) for symbol in symbols]
+    condition = (df['Z'] <= max_rank) & (df['Z'] > 0)
     return df[condition]
 
 def add_cash_flow(df):
@@ -47,7 +47,18 @@ def add_cash_flow(df):
         data.update(parser.get_for_symbol(symbol))
     df['D.Paid'] = [data.get(symbol).get('dividend_paid') for symbol in symbols]
     df['Free CF'] = [data.get(symbol).get('free_cash_flow') for symbol in symbols]
-    df['Coverage'] = [data.get(symbol).get('cash_flow_ratio') for symbol in symbols]
+    df['Cover'] = [data.get(symbol).get('cash_flow_ratio') for symbol in symbols]
+    condition = df['Cover'] < 75 # dividend coverage percentage
+    return df[condition]
+
+def add_dividends(df):
+    symbols = df['Symbol']
+    parser = DivParser()
+    data = dict()
+    for symbol in symbols:
+        data.update(parser.get_for_symbol(symbol))
+    df['5avg'] = [data.get(symbol).get('average5') for symbol in symbols]
+    df['CurD'] = [data.get(symbol).get('yield') for symbol in symbols]
     return df
 
 
@@ -71,6 +82,8 @@ if __name__ == "__main__":
     df = filter_by_dgr(df, args.min_grow)
     print("Fetching Financial Data...")
     df = add_cash_flow(df)
+    print("Fetching Dividend Data...")
+    df = add_dividends(df)
     print("Fetching Zacks Rank...")
     df = add_zacks_rank(df, args.max_zacks)
     format_columns(df)
