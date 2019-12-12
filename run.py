@@ -5,7 +5,7 @@ from ranker import ZacksRanker
 from balance import CashFlowParser, DivParser
 
 SOURCE = "https://bitly.com/USDividendChampions"
-COLUMNS = [0, 1, 3, 4, 8, 9, 10, 17, 18, 19, 20, 21]
+COLUMNS = [0, 1, 3, 4, 8, 9, 17, 18, 19, 20, 21]
 
 
 def filter_out_summary(df):
@@ -25,12 +25,11 @@ def format_columns(df):
     pandas.options.display.float_format = ' {:,.2f}'.format
     df['Yrs'] = df['Yrs'].map('{:,.0f}'.format)
     df['Price'] = df['Price'].map('${:,.2f}'.format)
-    df['Dividend'] = df['Dividend'].map('${:,.2f}'.format)
     df['Yield'] = df['Yield'].map('{:,.2f}%'.format)
     df['Inc.'] = df['Inc.'].map('{:,.2f}%'.format)
     df['Cover'] = df['Cover'].map('{:,.2f}%'.format)
-    df['Industry'] = df['Industry'].map(lambda x: x[:18])
-    df['Name'] = df['Name'].map(lambda x: x[:18])
+    df['Industry'] = df['Industry'].map(lambda x: x[:20])
+    df['Name'] = df['Name'].map(lambda x: x[:20])
 
 def add_zacks_rank(df, max_rank):
     symbols = df['Symbol']
