@@ -83,8 +83,8 @@ class DivParser(YahooParser):
 if __name__ == "__main__":
     parser = CashFlowParser()
     div_parser = DivParser()
-    data = parser.get_for_symbol("MMM")
+    data = parser.get_for_symbol("PEP")
     print(data)
-    div_data = div_parser.get_for_symbol("MMM")
+    div_data = div_parser.get_for_symbol("PEP")
     print(div_data)
 
