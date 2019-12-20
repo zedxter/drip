@@ -36,8 +36,8 @@ class Dripper:
         self.df['Yield'] = self.df['Yield'].map('{:,.2f}%'.format)
         self.df['Inc.'] = self.df['Inc.'].map('{:,.2f}%'.format)
         self.df['Cover'] = self.df['Cover'].map('{:,.2f}%'.format)
-        self.df['Industry'] = self.df['Industry'].map(lambda x: x[:20])
-        self.df['Name'] = self.df['Name'].map(lambda x: x[:20])
+        self.df['Industry'] = self.df['Industry'].map(lambda x: x[:15])
+        self.df['Name'] = self.df['Name'].map(lambda x: x[:15])
 
     def add_zacks_rank(self, max_rank=5):
         symbols = self.df['Symbol']
@@ -59,7 +59,7 @@ class Dripper:
             condition = self.df['Cover'] < coverage
             self.df = self.df[condition]
 
-    def add_dividends(self):
+    def add_dividends(self, best_only=False):
         symbols = self.df['Symbol']
         parser = DivParser()
         data = dict()
@@ -67,6 +67,15 @@ class Dripper:
             data.update(parser.get_for_symbol(symbol))
         self.df['5avg'] = [data.get(symbol).get('average5') for symbol in symbols]
         self.df['CurD'] = [data.get(symbol).get('yield') for symbol in symbols]
+        if best_only:
+            condition = self.df['CurD'].str.rstrip('%').astype('float') > self.df['5avg'].astype('float')
+            self.df = self.df[condition]
+
+    def add_check_mark(self):
+        self.df.loc[self.df['Cover'] > 75, 'C'] = ""
+        self.df.loc[self.df['Cover'] <= 75, 'C'] = "\u2713"
+        self.df.loc[self.df['CurD'].str.rstrip('%').astype('float') < self.df['5avg'].astype('float'), 'T'] = ""
+        self.df.loc[self.df['CurD'].str.rstrip('%').astype('float') >= self.df['5avg'].astype('float'), 'T'] = "\u2713"
 
     def get_table(self):
         return self.df
