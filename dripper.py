@@ -78,4 +78,4 @@ class Dripper:
         self.df.loc[self.df['CurD'].str.rstrip('%').astype('float') >= self.df['5avg'].astype('float'), 'T'] = "\u2713"
 
     def get_table(self):
-        return self.df
+        return self.df.reset_index(drop=True)
