@@ -13,7 +13,7 @@ class Dripper:
 
     def __init__(self, group):
         content = requests.get(SOURCE, allow_redirects=True).content
-        self.df = pandas.read_excel(BytesIO(resp), sheet_name=group, skiprows=5, usecols=COLUMNS)
+        self.df = pandas.read_excel(BytesIO(content), sheet_name=group, skiprows=5, usecols=COLUMNS)
 
     def filter_by_symbols(self, symbols):
         self.df = self.df[self.df['Symbol'].isin(symbols)]
