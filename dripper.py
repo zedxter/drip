@@ -1,5 +1,7 @@
 import pandas
+import requests
 
+from io import BytesIO
 from ranker import ZacksRanker
 from balance import CashFlowParser, DivParser
 
@@ -10,7 +12,8 @@ COLUMNS = [0, 1, 3, 4, 8, 9, 17, 18, 19, 20, 21]
 class Dripper:
 
     def __init__(self, group):
-        self.df = pandas.read_excel(SOURCE, sheet_name=group, skiprows=5, usecols=COLUMNS)
+        content = requests.get(SOURCE, allow_redirects=True).content
+        self.df = pandas.read_excel(BytesIO(resp), sheet_name=group, skiprows=5, usecols=COLUMNS)
 
     def filter_by_symbols(self, symbols):
         self.df = self.df[self.df['Symbol'].isin(symbols)]
