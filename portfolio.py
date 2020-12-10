@@ -33,7 +33,7 @@ if __name__ == '__main__':
         print("Fetching Dividend Data...")
         dripper.add_dividends()
         print("Fetching Zacks Rank...")
-        dripper.add_zacks_rank()
+        #dripper.add_zacks_rank()
         dripper.add_check_mark()
         dripper.format_columns()
         print(dripper.get_table())
