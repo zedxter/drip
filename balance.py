@@ -1,47 +1,27 @@
-import json
-import re
-import requests
+import yfinance
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 
-class YahooParser:
-
-    def _fetch_data(self, symbol):
-        response = requests.get(self.BASE_URL.format(symbol))
-        lines = response.text.split("\n")
-        line = [l for l in lines if l.startswith('root.App.main')][0]
-        line = re.sub(r'^root.App.main =', '', line).strip()
-        line = re.sub(r';$', '', line)
-        return json.loads(line)
-
-
-class CashFlowParser(YahooParser):
-
-    def __init__(self):
-        self.BASE_URL = "https://finance.yahoo.com/quote/{}/cash-flow"
+class CashFlowParser():
 
     def _get_ratio(self, series):
         dividends = self._get_value(series, 'trailingCashDividendsPaid')
         free_cash = self._get_value(series, 'trailingFreeCashFlow')
         return abs(float(dividends) / free_cash) * 100
 
-    def _get_value(self, series, val, raw=True):
-        try:
-            return series[val][0]['reportedValue']['raw' if raw else 'fmt']
-        except:
-            return -1
-
     def get_for_symbol(self, symbol):
         try:
-            data = self._fetch_data(symbol)
-            series = data['context']['dispatcher']['stores']['QuoteTimeSeriesStore']['timeSeries']
+            ticker = yfinance.Ticker(symbol)
+            info = ticker.info
+            dividends = info.get('trailingAnnualDividendRate', 0) * info.get('floatShares', 0)
+            free_cash = info.get('freeCashflow', 0)
             return {
                 symbol: {
-                    'dividend_paid': self._get_value(series, 'trailingCashDividendsPaid', False),
-                    'free_cash_flow': self._get_value(series, 'trailingFreeCashFlow', False),
-                    'cash_flow_ratio': self._get_ratio(series)
+                    'dividend_paid': dividends,
+                    'free_cash_flow': free_cash,
+                    'cash_flow_ratio': abs(float(dividends) / free_cash) * 100
                 }
             }
         except:
@@ -61,19 +41,16 @@ class CashFlowParser(YahooParser):
         return result
 
 
-class DivParser(YahooParser):
-
-    def __init__(self):
-        self.BASE_URL = "https://finance.yahoo.com/quote/{}/key-statistics"
+class DivParser():
 
     def get_for_symbol(self, symbol):
         try:
-            data = self._fetch_data(symbol)
-            series = data['context']['dispatcher']['stores']['QuoteSummaryStore']['summaryDetail']
+            ticker = yfinance.Ticker(symbol)
+            info = ticker.info
             return {
                 symbol: {
-                    'yield': series.get('dividendYield', {}).get('fmt'),
-                    'average5': series.get('fiveYearAvgDividendYield', {}).get('fmt')
+                    'yield': info.get('trailingAnnualDividendRate', 0),
+                    'average5': info.get('fiveYearAvgDividendYield', 0)
                 }
             }
         except:
@@ -83,8 +60,8 @@ class DivParser(YahooParser):
 if __name__ == "__main__":
     parser = CashFlowParser()
     div_parser = DivParser()
-    data = parser.get_for_symbol("PEP")
+    data = parser.get_for_symbol("TROW")
     print(data)
-    div_data = div_parser.get_for_symbol("PEP")
+    div_data = div_parser.get_for_symbol("TROW")
     print(div_data)
 
